@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy-Family Management System - Premium Realtime Edition</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 for notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Firebase Compatibility SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Canvas Background */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Page Load Premium Animation */
+        @keyframes pageEntrance {
+            0% {
+                opacity: 0;
+                transform: translateY(24px) scale(0.98);
+                filter: blur(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0px);
+            }
+        }
+
+        .animate-page-entrance {
+            animation: pageEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+
+        /* Scroll Down Reveal Animation */
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mouse Hover Interactive Dynamic Glow & 3D Tilt */
+        .interactive-hover-card {
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .interactive-hover-card:hover {
+            transform: translateY(-4px) perspective(1000px) rotateX(1.5deg) rotateY(-1.5deg);
+            box-shadow: 0 15px 30px -10px rgba(2, 132, 199, 0.25);
+        }
+
+        /* Meal Rate Bright High-Contrast Fix */
+        .meal-rate-badge {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            border: 1px solid #38bdf8;
+            box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0284c7;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-100 flex flex-col min-h-screen relative">
+
+    <!-- Interactive 3D Particle Canvas Background -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- Main Wrapper for Z-index stacking -->
+    <div class="relative z-10 flex flex-col min-h-screen">
+
+        <!-- Top Navigation Header -->
+        <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-lg no-print animate-page-entrance">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16 gap-2">
+                    <!-- Logo & Title -->
+                    <div class="flex items-center space-x-2 sm:space-x-3 interactive-hover-card p-1 rounded-xl">
+                        <div class="bg-brand-500 p-2 rounded-lg text-white shadow-lg shadow-brand-500/30 flex-shrink-0">
+                            <i class="fa-solid font-bold fa-utensils text-base sm:text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-sm sm:text-xl font-extrabold tracking-tight text-white leading-tight">Happy-Family System</h1>
+                            <p class="text-[10px] sm:text-xs text-slate-400 hidden md:block">Automated Meal & Expense Management with Live Cloud Sync</p>
+                        </div>
+                    </div>
+
+                    <!-- Global Controls -->
+                    <div class="flex items-center space-x-1.5 sm:space-x-3">
+                        <!-- Live Clock -->
+                        <div class="hidden lg:flex flex-col items-end bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700/80 text-xs shadow-inner">
+                            <span id="headerLiveDate" class="font-bold text-slate-200">--</span>
+                            <span id="headerLiveTime" class="text-brand-400 font-mono text-[11px]">--:--:--</span>
+                        </div>
+
+                        <!-- Live Sync Badge -->
+                        <div id="syncStatus" class="flex items-center gap-1.5 bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>Live Cloud Sync</span>
+                        </div>
+
+                        <!-- Month Selector -->
+                        <div class="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700/80">
+                            <i class="fa-solid fa-calendar-alt text-brand-400 ml-1.5 mr-1 text-xs"></i>
+                            <input type="month" id="selectedMonth" onchange="app.changeMonth(this.value)" class="bg-transparent text-white text-[11px] sm:text-sm font-medium focus:outline-none cursor-pointer pr-1 w-28 sm:w-auto">
+                        </div>
+
+                        <!-- Activity Logs Button -->
+                        <button onclick="app.openLogModal()" title="Activity Logs & Actions" class="bg-slate-800 hover:bg-slate-700 text-brand-400 hover:text-brand-300 p-2 rounded-lg border border-slate-700/80 transition relative interactive-hover-card">
+                            <i class="fa-solid fa-list-check text-sm sm:text-base"></i>
+                        </button>
+
+                        <!-- Role Switcher -->
+                        <div class="relative">
+                            <button onclick="app.toggleRole()" id="roleBadge" class="px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-slate-700 text-white hover:bg-slate-600 transition flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-user"></i>
+                                <span id="roleText" class="hidden sm:inline">Member View</span>
+                            </button>
+                        </div>
+
+                        <!-- Backup / Restore Button (Secured for Manager Only) -->
+                        <button onclick="app.openBackupModal()" id="backupNavBtn" title="Data Backup & Disaster Recovery" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg border border-slate-700/80 transition interactive-hover-card hidden sm:block manager-only-nav">
+                            <i class="fa-solid fa-database text-sm sm:text-base"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sub Navigation Menu -->
+        <nav class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-16 z-20 shadow-md no-print animate-page-entrance delay-100">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="flex space-x-1 sm:space-x-3 overflow-x-auto py-2.5 scrollbar-none">
+                    <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-brand-500 text-white shadow-lg shadow-brand-500/25">
+                        <i class="fa-solid fa-chart-pie"></i> Dashboard
+                    </button>
+                    <button onclick="app.navigate('meals')" id="nav-meals" class="nav-btn px-3 py-2 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-utensils"></i> Daily Meals
+                    </button>
+                    <button onclick="app.navigate('bazar')" id="nav-bazar" class="nav-btn px-3 py-2 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-cart-shopping"></i> Grocery & Bazar
+                    </button>
+                    <button onclick="app.navigate('deposits')" id="nav-deposits" class="nav-btn px-3 py-2 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 whitespace-nowrap manager-only-nav">
+                        <i class="fa-solid fa-wallet"></i> Deposits
+                    </button>
+                    <button onclick="app.navigate('settlement')" id="nav-settlement" class="nav-btn px-3 py-2 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 whitespace-nowrap manager-only-nav">
+                        <i class="fa-solid fa-scale-balanced"></i> Settlement & Clear
+                    </button>
+                    <button onclick="app.navigate('members')" id="nav-members" class="nav-btn px-3 py-2 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 whitespace-nowrap manager-only-nav">
+                        <i class="fa-solid fa-users"></i> Members
+                    </button>
+                    <button onclick="app.navigate('reports')" id="nav-reports" class="nav-btn px-3 py-2 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 whitespace-nowrap manager-only-nav">
+                        <i class="fa-solid fa-file-invoice"></i> Monthly Report
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Dynamic Content Container -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-6 animate-page-entrance delay-200">
+            <div id="view-container">
+                <!-- Dynamic Content loaded by JS -->
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-900/90 border-t border-slate-800 py-4 mt-auto no-print text-center text-xs text-slate-400">
+            <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+                <div>
+                    <span>Family & Mess Management System &copy; <span id="currentYear"></span> Design By <a href="https://rakibulweb.github.io/" target="_blank" class="text-brand-400 hover:underline font-bold">Rakibul</a></span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="inline-flex items-center gap-1"><i class="fa-solid fa-cloud text-emerald-400"></i> Firebase Realtime Cloud Connected</span>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- MODALS CONTAINER -->
+
+    <!-- Modal: Weekly Bazar Schedule Assign Modal -->
+    <div id="bazarDutyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto text-slate-100">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-days text-brand-400"></i> Assign 7-Day Weekly Bazar Duty
+                </h3>
+                <button onclick="app.closeModal('bazarDutyModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">Assign one active member for each day of the week. Only Manager can edit this policy.</p>
+            
+            <form id="bazarDutyForm" onsubmit="app.saveBazarDutySchedule(event)">
+                <div class="space-y-3 mb-6" id="bazarDutyInputs">
+                    <!-- Injected Dynamically -->
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-slate-800">
+                    <button type="button" onclick="app.autoDistributeBazarDuty()" class="w-full sm:w-auto px-3 py-1.5 bg-brand-900/60 hover:bg-brand-800/80 text-brand-300 text-xs font-semibold rounded-lg border border-brand-700/50">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto Assign
+                    </button>
+                    <div class="flex gap-2 w-full sm:w-auto justify-end">
+                        <button type="button" onclick="app.closeModal('bazarDutyModal')" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+                        <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold hover:bg-brand-500 shadow-md">Save Schedule</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Activity Log History -->
+    <div id="logModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl relative max-h-[85vh] flex flex-col text-slate-100">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-brand-400"></i> Mess Activity Log History
+                </h3>
+                <button onclick="app.closeModal('logModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 mb-3">Detailed timestamped record of actions made by managers and members:</p>
+            <div id="logContainer" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                <!-- Log Items Dynamic Injection -->
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+                <button type="button" onclick="app.closeModal('logModal')" class="px-4 py-2 rounded-lg bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Member Add/Edit -->
+    <div id="memberModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl relative text-slate-100">
+            <h3 id="memberModalTitle" class="text-base sm:text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-user-plus text-brand-400"></i> Add New Member
+            </h3>
+            <form id="memberForm" onsubmit="app.saveMember(event)">
+                <input type="hidden" id="memberId">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Member Name *</label>
+                        <input type="text" id="memberName" required placeholder="e.g. Md. Ariful Islam" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Mobile Phone Number</label>
+                        <input type="tel" id="memberPhone" placeholder="017XXXXXXXX" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Room No. / Location</label>
+                        <input type="text" id="memberRoom" placeholder="e.g. Room 302" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Status</label>
+                        <select id="memberStatus" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm text-white">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="app.closeModal('memberModal')" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm hover:bg-slate-800 transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 transition shadow-md">Save Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Bazar Entry Add/Edit -->
+    <div id="bazarModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto text-slate-100">
+            <h3 id="bazarModalTitle" class="text-base sm:text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-cart-plus text-brand-400"></i> New Grocery Entry
+            </h3>
+            <form id="bazarForm" onsubmit="app.saveBazar(event)">
+                <input type="hidden" id="bazarId">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Purchase Date *</label>
+                        <input type="date" id="bazarDate" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Buyer (Member Name) *</label>
+                        <select id="bazarBuyerId" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 text-sm text-white">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950/60 p-3 sm:p-4 rounded-xl border border-slate-800 mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-slate-300 uppercase">Item List</span>
+                        <button type="button" onclick="app.addBazarItemRow()" class="text-xs bg-brand-900/60 text-brand-300 px-2.5 py-1 rounded-lg border border-brand-700/50 hover:bg-brand-800 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Add Item
+                        </button>
+                    </div>
+                    <div id="bazarItemsContainer" class="space-y-2">
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center">
+                        <span class="font-bold text-slate-300 text-xs sm:text-sm">Grand Total Expense:</span>
+                        <span id="bazarGrandTotal" class="text-base sm:text-lg font-extrabold text-emerald-400">৳ 0.00</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Additional Note / Comment</label>
+                    <input type="text" id="bazarNote" placeholder="e.g. Weekly big grocery purchase" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="app.closeModal('bazarModal')" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm hover:bg-slate-800">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Deposit Entry Add/Edit -->
+    <div id="depositModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl relative text-slate-100">
+            <h3 id="depositModalTitle" class="text-base sm:text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-money-bill-wave text-emerald-400"></i> Record Member Deposit
+            </h3>
+            <form id="depositForm" onsubmit="app.saveDeposit(event)">
+                <input type="hidden" id="depositId">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Member Name *</label>
+                        <select id="depositMemberId" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 text-sm text-white">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Deposit Amount (TK) *</label>
+                        <input type="number" id="depositAmount" step="any" min="1" required placeholder="e.g. 2000" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Date *</label>
+                        <input type="date" id="depositDate" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Payment Method</label>
+                        <select id="depositType" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                            <option value="Cash">Cash</option>
+                            <option value="Bkash">bKash</option>
+                            <option value="Nagad">Nagad</option>
+                            <option value="Bank">Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Comment</label>
+                        <input type="text" id="depositNote" placeholder="e.g. 1st installment deposit" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="app.closeModal('depositModal')" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500">Save Deposit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Settlement Clear Payment -->
+    <div id="clearModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl relative text-slate-100">
+            <h3 class="text-base sm:text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-file-signature text-purple-400"></i> Clear Member Balance
+            </h3>
+            <form id="clearForm" onsubmit="app.saveSettlement(event)">
+                <input type="hidden" id="clearMemberId">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 mb-4 text-xs space-y-1">
+                    <p>Member: <strong id="clearMemberName" class="text-white"></strong></p>
+                    <p>Current Account Status: <strong id="clearCurrentBalance" class="text-white"></strong></p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Transaction Type *</label>
+                        <select id="clearType" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                            <option value="Refund">Refund Money Paid Back</option>
+                            <option value="Collection">Due Debt Amount Collected</option>
+                            <option value="Zero">Direct Balance Adjustment / Zero Out</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Settled / Collected Amount (TK) *</label>
+                        <input type="number" id="clearAmount" step="any" required placeholder="0.00" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Date *</label>
+                        <input type="date" id="clearDate" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Set Status</label>
+                        <select id="clearStatus" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                            <option value="Cleared">Fully Cleared (Settled)</option>
+                            <option value="Partial">Partially Cleared</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Note / Details</label>
+                        <input type="text" id="clearNote" placeholder="e.g. Refunded via bKash" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="app.closeModal('clearModal')" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-500">Save Clear Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Backup & Restore (Manager Only Secure Guard) -->
+    <div id="backupModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl relative text-slate-100">
+            <h3 class="text-base sm:text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-database text-brand-400"></i> Data Backup & Disaster Recovery
+            </h3>
+            <div class="space-y-4">
+                <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+                    <h4 class="font-semibold text-sm text-white mb-1">Download Cloud Backup</h4>
+                    <p class="text-xs text-slate-400 mb-3">Export complete state containing members, meals, bazar, deposits, and activity logs.</p>
+                    <button onclick="app.exportData()" class="w-full py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-solid fa-download"></i> Export JSON Backup
+                    </button>
+                </div>
+
+                <div class="p-4 bg-rose-950/40 border border-rose-800/60 rounded-xl">
+                    <h4 class="font-semibold text-sm text-rose-300 mb-1">Disaster Recovery (Restore)</h4>
+                    <p class="text-xs text-rose-400/80 mb-3">If data is accidentally deleted or corrupted, upload a previous JSON backup to restore state.</p>
+                    <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="app.importData(event)">
+                    <button onclick="document.getElementById('importFileInput').click()" class="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-solid fa-rotate-left"></i> Restore From Backup File
+                    </button>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button type="button" onclick="app.closeModal('backupModal')" class="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BACKGROUND ANIMATION CANVAS SCRIPT -->
+    <script>
+        // Interactive 3D Constellation Particle Canvas
+        (function initCanvas() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const mouse = { x: null, y: null, radius: 150 };
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.x;
+                mouse.y = e.y;
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if(e.touches.length > 0) {
+                    mouse.x = e.touches[0].clientX;
+                    mouse.y = e.touches[0].clientY;
+                }
+            });
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 0.8;
+                    this.vy = (Math.random() - 0.5) * 0.8;
+                    this.radius = Math.random() * 2 + 1;
+                    this.color = Math.random() > 0.5 ? '#0284c7' : '#38bdf8';
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                    if (mouse.x && mouse.y) {
+                        let dx = mouse.x - this.x;
+                        let dy = mouse.y - this.y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < mouse.radius) {
+                            let force = (mouse.radius - dist) / mouse.radius;
+                            this.x -= (dx / dist) * force * 3;
+                            this.y -= (dy / dist) * force * 3;
+                        }
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = this.color;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            const count = Math.min(Math.floor(window.innerWidth / 15), 70);
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let a = 0; a < particles.length; a++) {
+                    for (let b = a + 1; b < particles.length; b++) {
+                        let dx = particles[a].x - particles[b].x;
+                        let dy = particles[a].y - particles[b].y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 130) {
+                            let opacity = (1 - dist / 130) * 0.25;
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(56, 189, 248, ${opacity})`;
+                            ctx.lineWidth = 1;
+                            ctx.moveTo(particles[a].x, particles[a].y);
+                            ctx.lineTo(particles[b].x, particles[b].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        })();
+
+        // Scroll Down Intersection Observer Setup
+        function setupScrollObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+        }
+    </script>
+
+    <!-- FIREBASE INITIALIZATION & REALTIME ENGINE SCRIPT -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgNDICH1i8p6oSJ4hnCZR9rc-K4uav6Zw",
+            authDomain: "happyfamily-management.firebaseapp.com",
+            projectId: "happyfamily-management",
+            storageBucket: "happyfamily-management.firebasestorage.app",
+            messagingSenderId: "500056500755",
+            appId: "1:500056500755:web:49987cd6582a788ac95f66",
+            measurementId: "G-S0Z3NHBJ0Y"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        class MessApp {
+            constructor() {
+                this.currentMonth = new Date().toISOString().substring(0, 7); 
+                
+                this.role = sessionStorage.getItem('mess_role') || 'member'; 
+                this.currentView = sessionStorage.getItem('mess_view') || 'dashboard';
+                
+                this.data = {
+                    members: [],      
+                    managers: {},     
+                    managerChanges: {},
+                    bazarDutySchedule: {},
+                    meals: {},        
+                    bazar: [],        
+                    deposits: [],     
+                    settlements: [],  
+                    closedMonths: {}, 
+                    logs: [],
+                    settings: {
+                        managerPassword: '1234' 
+                    }
+                };
+
+                this.initLiveClock();
+                this.initFirebaseSync();
+            }
+
+            initLiveClock() {
+                const updateClock = () => {
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+                    const dEl = document.getElementById('headerLiveDate');
+                    const tEl = document.getElementById('headerLiveTime');
+                    if (dEl) dEl.textContent = dateStr;
+                    if (tEl) tEl.textContent = timeStr;
+                };
+                updateClock();
+                setInterval(updateClock, 1000);
+            }
+
+            initFirebaseSync() {
+                document.getElementById('currentYear').textContent = new Date().getFullYear();
+                document.getElementById('selectedMonth').value = this.currentMonth;
+
+                db.collection("mess_store").doc("main_data")
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const cloudData = doc.data();
+                            this.data = {
+                                members: cloudData.members || [],
+                                managers: cloudData.managers || {},
+                                managerChanges: cloudData.managerChanges || {},
+                                bazarDutySchedule: cloudData.bazarDutySchedule || {},
+                                meals: cloudData.meals || {},
+                                bazar: cloudData.bazar || [],
+                                deposits: cloudData.deposits || [],
+                                settlements: cloudData.settlements || [],
+                                closedMonths: cloudData.closedMonths || {},
+                                logs: cloudData.logs || [],
+                                settings: cloudData.settings || { managerPassword: '1234' }
+                            };
+                        } else {
+                            this.seedDefaultData();
+                        }
+                        this.ensureDailyMealsForMonth(this.currentMonth);
+                        this.render();
+                    }, (error) => {
+                        console.error("Firebase Sync Error: ", error);
+                    });
+            }
+
+            saveState(logActionMessage = null) {
+                if (logActionMessage) {
+                    if (!this.data.logs) this.data.logs = [];
+                    const timeStamp = new Date().toLocaleString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    });
+                    this.data.logs.unshift({
+                        time: timeStamp,
+                        action: logActionMessage,
+                        user: this.role === 'manager' ? 'Manager' : 'Member'
+                    });
+                    if (this.data.logs.length > 200) {
+                        this.data.logs = this.data.logs.slice(0, 200);
+                    }
+                }
+
+                db.collection("mess_store").doc("main_data").set(this.data)
+                    .then(() => {
+                        console.log("Realtime Data Synced with Cloud!");
+                    })
+                    .catch((err) => {
+                        console.error("Error saving state to Firestore: ", err);
+                    });
+            }
+
+            seedDefaultData() {
+                const m = this.currentMonth;
+                const todayStr = new Date().toISOString().substring(0, 10);
+
+                this.data = {
+                    members: [
+                        { id: 'm1', name: 'Md Rakibul Islam', phone: '01771-396915', room: 'VIP', status: 'active', createdAt: todayStr },
+                        { id: 'm2', name: 'Rayhan Ahammed Khan', phone: '01848-093797', room: 'VIP', status: 'active', createdAt: todayStr },
+                        { id: 'm3', name: 'SM Jubayer', phone: '01881-665777', room: '702', status: 'active', createdAt: todayStr },
+                        { id: 'm1', name: 'Mizanur Rahman Munna', phone: '01725-374069', room: '702', status: 'active', createdAt: todayStr },
+                        { id: 'm1', name: 'Mahmudul Hasan Nahid', phone: '01716-226598', room: '703', status: 'active', createdAt: todayStr },
+                        { id: 'm1', name: 'Fahimur Rahman', phone: '01811-513163', room: '703', status: 'active', createdAt: todayStr },
+                        { id: 'm1', name: 'Al-Amin', phone: '01795-884875', room: '703', status: 'active', createdAt: todayStr }
+                    ],
+                    managers: { [m]: 'm1' },
+                    managerChanges: { [m]: 1 },
+                    bazarDutySchedule: {},
+                    meals: {},
+                    bazar: [],
+                    deposits: [],
+                    settlements: [],
+                    closedMonths: {},
+                    logs: [{
+                        time: new Date().toLocaleString('en-US'),
+                        action: 'System initialized and cloud sync active',
+                        user: 'System'
+                    }],
+                    settings: { managerPassword: '1234' }
+                };
+
+                this.saveState();
+            }
+
+            async toggleRole() {
+                if (this.role === 'manager') {
+                    this.role = 'member';
+                    sessionStorage.setItem('mess_role', 'member');
+                    this.currentView = 'dashboard';
+                    sessionStorage.setItem('mess_view', 'dashboard');
+                    this.updateRoleUI();
+                    this.render();
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: 'Switched to Member View',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                } else {
+                    const { value: password, isDismissed } = await Swal.fire({
+                        title: 'Enter Manager Password',
+                        html: `
+                            <input id="swal-login-pass" type="password" class="swal2-input" placeholder="Enter Password" style="margin-bottom: 8px;">
+                            <div style="text-align: right; margin-right: 25px;">
+                                <a href="#" id="swal-forget-link" style="font-size: 13px; color: #0284c7; text-decoration: underline;">Forgot Password?</a>
+                            </div>
+                        `,
+                        focusConfirm: false,
+                        showCancelButton: true,
+                        confirmButtonText: 'Login',
+                        cancelButtonText: 'Cancel',
+                        didOpen: () => {
+                            document.getElementById('swal-forget-link').addEventListener('click', (e) => {
+                                e.preventDefault();
+                                Swal.close();
+                                this.handleForgotPassword();
+                            });
+                        },
+                        preConfirm: () => {
+                            return document.getElementById('swal-login-pass').value;
+                        }
+                    });
+
+                    if (password !== undefined && !isDismissed) {
+                        const currentPass = this.data.settings?.managerPassword || '1234';
+                        if (password === currentPass) {
+                            this.role = 'manager';
+                            sessionStorage.setItem('mess_role', 'manager');
+                            this.updateRoleUI();
+                            this.render();
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: 'Manager View Activated',
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                        } else {
+                            Swal.fire('Incorrect Password', 'Please enter the valid manager password.', 'error');
+                        }
+                    }
+                }
+            }
+
+            async handleForgotPassword() {
+                const { value: formValues } = await Swal.fire({
+                    title: 'Reset Manager Password',
+                    html: `
+                        <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Enter master password to reset manager password.</p>
+                        <input id="swal-master-pass" type="password" class="swal2-input" placeholder="Master Password">
+                        <input id="swal-new-pass" type="password" class="swal2-input" placeholder="New Manager Password">
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Reset Password',
+                    cancelButtonText: 'Cancel',
+                    preConfirm: () => {
+                        return [
+                            document.getElementById('swal-master-pass').value,
+                            document.getElementById('swal-new-pass').value
+                        ];
+                    }
+                });
+
+                if (formValues) {
+                    const [masterPass, newPass] = formValues;
+
+                    if (masterPass !== 'Rakibul') {
+                        Swal.fire('Error!', 'Invalid master password! Please enter correct master password.', 'error');
+                        return;
+                    }
+
+                    if (!newPass || newPass.trim() === '') {
+                        Swal.fire('Error!', 'New password cannot be empty!', 'error');
+                        return;
+                    }
+
+                    this.data.settings.managerPassword = newPass.trim();
+                    this.saveState('Manager password was reset');
+                    Swal.fire('Success!', 'Manager password updated successfully.', 'success');
+                }
+            }
+
+            updateRoleUI() {
+                const badge = document.getElementById('roleBadge');
+                const text = document.getElementById('roleText');
+                const managerNavs = document.querySelectorAll('.manager-only-nav');
+
+                if (this.role === 'manager') {
+                    badge.className = 'px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition flex items-center gap-1.5 shadow';
+                    text.textContent = 'Manager View';
+                    managerNavs.forEach(el => el.classList.remove('hidden'));
+                } else {
+                    badge.className = 'px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-slate-700 text-white hover:bg-slate-600 transition flex items-center gap-1.5 shadow';
+                    text.textContent = 'Member View';
+                    managerNavs.forEach(el => el.classList.add('hidden'));
+                }
+            }
+
+            changeMonth(month) {
+                this.currentMonth = month;
+                this.ensureDailyMealsForMonth(month);
+                this.render();
+            }
+
+            navigate(view) {
+                if (this.role === 'member' && ['deposits', 'settlement', 'members', 'reports'].includes(view)) {
+                    Swal.fire('Access Restricted', 'Please switch to Manager View with password to access this page.', 'warning');
+                    return;
+                }
+
+                this.currentView = view;
+                sessionStorage.setItem('mess_view', view);
+
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-brand-500', 'text-white', 'shadow-lg');
+                    btn.classList.add('text-slate-300', 'hover:bg-slate-800');
+                });
+                const activeBtn = document.getElementById(`nav-${view}`);
+                if (activeBtn) {
+                    activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800');
+                    activeBtn.classList.add('bg-brand-500', 'text-white', 'shadow-lg');
+                }
+                this.render();
+            }
+
+            ensureDailyMealsForMonth(month) {
+                if (!this.data.meals) this.data.meals = {};
+                if (!this.data.meals[month]) this.data.meals[month] = {};
+
+                const [year, monthNum] = month.split('-').map(Number);
+                const daysInMonth = new Date(year, monthNum, 0).getDate();
+                const now = new Date();
+                const currentYM = now.toISOString().substring(0, 7);
+
+                if (month > currentYM) {
+                    return;
+                }
+
+                let maxDay = daysInMonth;
+                if (month === currentYM) {
+                    maxDay = now.getDate();
+                }
+
+                const activeMembers = (this.data.members || []).filter(m => m.status === 'active');
+
+                let updated = false;
+                for (let d = 1; d <= maxDay; d++) {
+                    const dayStr = String(d).padStart(2, '0');
+                    const dateKey = `${month}-${dayStr}`;
+
+                    if (!this.data.meals[month][dateKey]) {
+                        this.data.meals[month][dateKey] = {};
+                        updated = true;
+                    }
+
+                    activeMembers.forEach(mem => {
+                        if (this.data.meals[month][dateKey][mem.id] === undefined) {
+                            this.data.meals[month][dateKey][mem.id] = 1;
+                            updated = true;
+                        }
+                    });
+                }
+                if (updated) {
+                    this.saveState();
+                }
+            }
+
+            getCalculatedStats(month = this.currentMonth) {
+                const members = this.data.members || [];
+                const activeMembers = members.filter(m => m.status === 'active');
+
+                const monthBazars = (this.data.bazar || []).filter(b => b.month === month);
+                const totalBazarCost = monthBazars.reduce((sum, b) => sum + Number(b.grandTotal || 0), 0);
+
+                const monthDeposits = (this.data.deposits || []).filter(d => d.month === month);
+                const totalDeposits = monthDeposits.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+
+                // Current Balance = Total Deposits - Total Bazar Cost
+                const currentBalance = totalDeposits - totalBazarCost;
+
+                const monthMealsObj = (this.data.meals && this.data.meals[month]) ? this.data.meals[month] : {};
+                let totalMeals = 0;
+                const memberMealMap = {}; 
+
+                members.forEach(m => memberMealMap[m.id] = 0);
+
+                Object.keys(monthMealsObj).forEach(dateKey => {
+                    const dayMeals = monthMealsObj[dateKey];
+                    Object.keys(dayMeals).forEach(mId => {
+                        const count = Number(dayMeals[mId] || 0);
+                        totalMeals += count;
+                        memberMealMap[mId] = (memberMealMap[mId] || 0) + count;
+                    });
+                });
+
+                const mealRate = totalMeals > 0 ? (totalBazarCost / totalMeals) : 0;
+
+                const memberSummaries = members.map(member => {
+                    const mMeals = memberMealMap[member.id] || 0;
+                    const mDeposits = monthDeposits
+                        .filter(d => d.memberId === member.id)
+                        .reduce((sum, d) => sum + Number(d.amount || 0), 0);
+
+                    const mCost = mMeals * mealRate;
+                    let netBalance = mDeposits - mCost;
+
+                    const settlement = (this.data.settlements || []).find(s => s.month === month && s.memberId === member.id);
+                    let isCleared = false;
+                    let clearStatusText = 'Unsettled';
+
+                    if (settlement) {
+                        if (settlement.status === 'Cleared') {
+                            isCleared = true;
+                            clearStatusText = 'Fully Cleared';
+                        } else if (settlement.status === 'Partial') {
+                            clearStatusText = 'Partially Cleared';
+                        }
+                    }
+
+                    let pabena = 0;
+                    let debe = 0;
+
+                    if (netBalance > 0) {
+                        pabena = netBalance;
+                    } else if (netBalance < 0) {
+                        debe = Math.abs(netBalance);
+                    }
+
+                    return {
+                        ...member,
+                        totalMeals: mMeals,
+                        totalDeposit: mDeposits,
+                        totalCost: mCost,
+                        netBalance,
+                        pabena,
+                        debe,
+                        isCleared,
+                        clearStatusText,
+                        settlement
+                    };
+                });
+
+                const totalPabena = memberSummaries.reduce((sum, m) => sum + m.pabena, 0);
+                const totalDebe = memberSummaries.reduce((sum, m) => sum + m.debe, 0);
+
+                const managerId = this.data.managers ? this.data.managers[month] : null;
+                const manager = members.find(m => m.id === managerId);
+                const managerChangeCount = (this.data.managerChanges && this.data.managerChanges[month]) ? this.data.managerChanges[month] : 0;
+
+                return {
+                    totalMembersCount: activeMembers.length,
+                    totalMeals,
+                    totalBazarCost,
+                    totalDeposits,
+                    currentBalance,
+                    mealRate,
+                    totalPabena,
+                    totalDebe,
+                    memberSummaries,
+                    managerName: manager ? manager.name : 'Not Set',
+                    managerChangeCount,
+                    isMonthClosed: !!(this.data.closedMonths && this.data.closedMonths[month])
+                };
+            }
+
+            render() {
+                this.updateRoleUI();
+                const container = document.getElementById('view-container');
+                
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-brand-500', 'text-white', 'shadow-lg');
+                    btn.classList.add('text-slate-300', 'hover:bg-slate-800');
+                });
+                const activeBtn = document.getElementById(`nav-${this.currentView}`);
+                if (activeBtn) {
+                    activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800');
+                    activeBtn.classList.add('bg-brand-500', 'text-white', 'shadow-lg');
+                }
+
+                switch (this.currentView) {
+                    case 'dashboard':
+                        container.innerHTML = this.renderDashboard();
+                        break;
+                    case 'meals':
+                        container.innerHTML = this.renderMeals();
+                        break;
+                    case 'bazar':
+                        container.innerHTML = this.renderBazar();
+                        break;
+                    case 'deposits':
+                        if(this.role !== 'manager') { this.navigate('dashboard'); return; }
+                        container.innerHTML = this.renderDeposits();
+                        break;
+                    case 'settlement':
+                        if(this.role !== 'manager') { this.navigate('dashboard'); return; }
+                        container.innerHTML = this.renderSettlement();
+                        break;
+                    case 'members':
+                        if(this.role !== 'manager') { this.navigate('dashboard'); return; }
+                        container.innerHTML = this.renderMembers();
+                        break;
+                    case 'reports':
+                        if(this.role !== 'manager') { this.navigate('dashboard'); return; }
+                        container.innerHTML = this.renderReports();
+                        break;
+                    default:
+                        container.innerHTML = this.renderDashboard();
+                }
+
+                setTimeout(setupScrollObserver, 100);
+            }
+
+            getTodayDutyMemberName() {
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const todayName = days[new Date().getDay()];
+                const sched = this.data.bazarDutySchedule || {};
+                const mId = sched[todayName];
+                const mem = (this.data.members || []).find(m => m.id === mId);
+                return mem ? mem.name : 'Not Assigned';
+            }
+
+            renderDashboard() {
+                const stats = this.getCalculatedStats();
+                const [year, monthNum] = this.currentMonth.split('-');
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                const monthText = `${monthNames[parseInt(monthNum)-1]} ${year}`;
+
+                const todayDutyName = this.getTodayDutyMemberName();
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const currentDayIndex = new Date().getDay();
+                const sched = this.data.bazarDutySchedule || {};
+
+                const recentBazars = [...(this.data.bazar || [])].filter(b => b.month === this.currentMonth).reverse().slice(0, 3);
+                const recentDeposits = [...(this.data.deposits || [])].filter(d => d.month === this.currentMonth).reverse().slice(0, 3);
+
+                return `
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="bg-gradient-to-r from-slate-900 via-brand-950 to-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 text-white shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 interactive-hover-card reveal-on-scroll">
+                            <div>
+                                <div class="inline-flex items-center gap-2 px-3 py-1 bg-brand-500/20 border border-brand-500/40 rounded-full text-xs text-brand-300 font-medium mb-2">
+                                    <i class="fa-solid fa-calendar-check"></i> Month: ${monthText}
+                                </div>
+                                <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight">Happy-Family Cost Summary Dashboard</h2>
+                                <p class="text-xs sm:text-sm text-slate-400 mt-1">All mess calculations at a glance - Cloud & Audit Log Enabled</p>
+                            </div>
+                            <div class="flex items-center gap-3 bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 shadow-lg w-full md:w-auto justify-between md:justify-start">
+                                <div class="bg-brand-500/20 p-3 rounded-lg text-brand-400">
+                                    <i class="fa-solid fa-user-tie text-xl"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-slate-400 block">Current Manager</span>
+                                    <span class="font-bold text-sm sm:text-base text-white">${stats.managerName}</span>
+                                </div>
+                                ${this.role === 'manager' ? `
+                                    <div class="flex items-center gap-1 ml-auto">
+                                        ${stats.managerChangeCount >= 1 ? 
+                                            `<span class="text-[10px] bg-rose-500/20 border border-rose-400/40 text-rose-300 px-2 py-1 rounded">Locked</span>` :
+                                            `<button onclick="app.promptSelectManager()" class="text-xs bg-brand-600 hover:bg-brand-500 text-white px-2.5 py-1 rounded transition shadow">Change</button>`
+                                        }
+                                        <button onclick="app.promptChangePassword()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded transition shadow" title="Change Password">
+                                            Pass
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <!-- TODAY BAZAR ASSIGNEE HIGHLIGHT & 7-DAY SCHEDULE -->
+                        <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden interactive-hover-card reveal-on-scroll">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b border-slate-800">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white flex items-center justify-center font-bold text-lg shadow-lg flex-shrink-0">
+                                        <i class="fa-solid fa-basket-shopping"></i>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] sm:text-xs uppercase font-extrabold tracking-wider text-orange-400 block">Today's Assigned Grocery Duty</span>
+                                        <h3 class="text-lg sm:text-xl font-extrabold text-white">Today Bazar: <span class="text-brand-400">${todayDutyName}</span></h3>
+                                    </div>
+                                </div>
+                                ${this.role === 'manager' ? `
+                                    <button onclick="app.openBazarDutyModal()" class="w-full sm:w-auto px-3 py-1.5 bg-brand-950 hover:bg-brand-900 text-brand-300 text-xs font-bold rounded-xl border border-brand-800 transition flex items-center justify-center gap-1.5 shadow">
+                                        <i class="fa-solid fa-calendar-pen"></i> Assign Weekly Bazar Duty
+                                    </button>
+                                ` : `
+                                    <span class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 flex items-center gap-1">
+                                        <i class="fa-solid fa-lock text-[10px]"></i> Manager Only Policy
+                                    </span>
+                                `}
+                            </div>
+
+                            <!-- 7 Days Cards -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                                ${days.map((dName, idx) => {
+                                    const isToday = idx === currentDayIndex;
+                                    const assignedMemId = sched[dName];
+                                    const assignedMem = (this.data.members || []).find(m => m.id === assignedMemId);
+                                    const memName = assignedMem ? assignedMem.name : 'None';
+
+                                    return `
+                                        <div class="p-2.5 rounded-xl border text-center transition ${isToday ? 'bg-orange-950/60 border-orange-500/60 ring-2 ring-orange-500/30' : 'bg-slate-800/50 border-slate-700/60'}">
+                                            <span class="text-[10px] font-bold uppercase ${isToday ? 'text-orange-400' : 'text-slate-400'} block mb-0.5">${dName} ${isToday ? '(Today)' : ''}</span>
+                                            <span class="text-xs font-extrabold ${isToday ? 'text-white' : 'text-slate-200'} truncate block">${memName}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- 7 Core KPI Summary Cards (Including Current Balance) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 reveal-on-scroll">
+                            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-xl interactive-hover-card">
+                                <div class="flex items-center justify-between text-slate-400 mb-2">
+                                    <span class="text-xs font-semibold uppercase">Total Members</span>
+                                    <i class="fa-solid fa-users text-brand-400"></i>
+                                </div>
+                                <div class="text-2xl font-black text-white">${stats.totalMembersCount}</div>
+                                <div class="text-[11px] text-slate-400 mt-1">Active mess members</div>
+                            </div>
+
+                            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-xl interactive-hover-card">
+                                <div class="flex items-center justify-between text-slate-400 mb-2">
+                                    <span class="text-xs font-semibold uppercase">Total Meals</span>
+                                    <i class="fa-solid fa-utensils text-orange-400"></i>
+                                </div>
+                                <div class="text-2xl font-black text-white">${stats.totalMeals.toFixed(1)}</div>
+                                <div class="text-[11px] text-slate-400 mt-1">Total meals eaten</div>
+                            </div>
+
+                            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-xl interactive-hover-card">
+                                <div class="flex items-center justify-between text-slate-400 mb-2">
+                                    <span class="text-xs font-semibold uppercase">Grocery Expense</span>
+                                    <i class="fa-solid fa-cart-shopping text-rose-400"></i>
+                                </div>
+                                <div class="text-2xl font-black text-white">৳ ${stats.totalBazarCost.toLocaleString('en-US', {minimumFractionDigits: 0})}</div>
+                                <div class="text-[11px] text-slate-400 mt-1">Total mess purchases</div>
+                            </div>
+
+                            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-xl interactive-hover-card">
+                                <div class="flex items-center justify-between text-slate-400 mb-2">
+                                    <span class="text-xs font-semibold uppercase">Total Deposits</span>
+                                    <i class="fa-solid fa-wallet text-emerald-400"></i>
+                                </div>
+                                <div class="text-2xl font-black text-white">৳ ${stats.totalDeposits.toLocaleString('en-US', {minimumFractionDigits: 0})}</div>
+                                <div class="text-[11px] text-slate-400 mt-1">Total member deposits</div>
+                            </div>
+
+                            <!-- CURRENT FUND BALANCE CARD -->
+                            <div class="bg-gradient-to-br from-indigo-950 to-slate-900 p-4 rounded-xl border border-indigo-800/60 shadow-xl interactive-hover-card">
+                                <div class="flex items-center justify-between text-indigo-300 mb-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider">Current Balance (Hand Cash)</span>
+                                    <i class="fa-solid fa-vault text-indigo-400"></i>
+                                </div>
+                                <div class="text-2xl font-black ${stats.currentBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}">৳ ${stats.currentBalance.toLocaleString('en-US', {minimumFractionDigits: 0})}</div>
+                                <div class="text-[11px] text-indigo-200/70 mt-1">Total Deposits - Total Bazar</div>
+                            </div>
+
+                            <!-- MEAL RATE COLOR HIGHLIGHT -->
+                            <div class="p-4 rounded-xl meal-rate-badge shadow-xl interactive-hover-card">
+                                <div class="flex items-center justify-between text-white/90 mb-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider">Meal Rate</span>
+                                    <i class="fa-solid fa-calculator text-white"></i>
+                                </div>
+                                <div class="text-2xl font-black text-white">৳ ${stats.mealRate.toFixed(2)}</div>
+                                <div class="text-[11px] text-white/80 mt-1">Grocery Expense ÷ Total Meals</div>
+                            </div>
+
+                            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-xl interactive-hover-card col-span-1 sm:col-span-2 xl:col-span-2">
+                                <div class="flex items-center justify-between text-slate-400 mb-2">
+                                    <span class="text-xs font-semibold uppercase">Due / Refund Summary</span>
+                                    <i class="fa-solid fa-scale-balanced text-purple-400"></i>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <div class="text-sm font-bold text-emerald-400">Receivable: ৳${stats.totalPabena.toFixed(0)}</div>
+                                    <div class="text-sm font-bold text-rose-400">Payable: ৳${stats.totalDebe.toFixed(0)}</div>
+                                </div>
+                                <div class="text-[11px] text-slate-400 mt-1">Net receivable & payable status</div>
+                            </div>
+                        </div>
+
+                        <!-- Individual Member Status Table -->
+                        <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden reveal-on-scroll">
+                            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/60">
+                                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-table-list text-brand-400"></i> Member Account Balances
+                                </h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs sm:text-sm">
+                                    <thead class="bg-slate-800/80 text-slate-300 text-[11px] sm:text-xs uppercase font-semibold border-b border-slate-700">
+                                        <tr>
+                                            <th class="p-3">Member Name</th>
+                                            <th class="p-3 text-center">Meals</th>
+                                            <th class="p-3 text-right">Deposits</th>
+                                            <th class="p-3 text-right">Meal Cost (৳)</th>
+                                            <th class="p-3 text-center">Status</th>
+                                            <th class="p-3 text-right">Receivable / Payable (৳)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        ${stats.memberSummaries.map(m => `
+                                            <tr class="hover:bg-slate-800/50 transition">
+                                                <td class="p-3 font-semibold text-white">
+                                                    ${m.name}
+                                                    <span class="text-[10px] sm:text-xs text-slate-400 font-normal block">${m.room ? 'Room: '+m.room : ''}</span>
+                                                </td>
+                                                <td class="p-3 text-center font-bold text-slate-200">${m.totalMeals.toFixed(1)}</td>
+                                                <td class="p-3 text-right text-emerald-400 font-medium">৳ ${m.totalDeposit.toLocaleString('en-US')}</td>
+                                                <td class="p-3 text-right text-slate-300 font-medium">৳ ${m.totalCost.toFixed(2)}</td>
+                                                <td class="p-3 text-center">
+                                                    ${m.isCleared ? 
+                                                        `<span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800/60">Fully Cleared</span>` :
+                                                        `<span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800/60">${m.clearStatusText}</span>`
+                                                    }
+                                                </td>
+                                                <td class="p-3 text-right font-bold text-xs sm:text-sm">
+                                                    ${m.netBalance > 0 ? 
+                                                        `<span class="text-emerald-400">Rec. ৳ ${m.pabena.toFixed(2)}</span>` : 
+                                                        (m.netBalance < 0 ? `<span class="text-rose-400">Pay. ৳ ${m.debe.toFixed(2)}</span>` : `<span class="text-slate-500">৳ 0.00</span>`)
+                                                    }
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Recent Logs Section -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 reveal-on-scroll">
+                            <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl interactive-hover-card">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-bold text-white text-sm flex items-center gap-2">
+                                        <i class="fa-solid fa-basket-shopping text-rose-400"></i> Recent Grocery Purchases
+                                    </h4>
+                                    <button onclick="app.navigate('bazar')" class="text-xs text-brand-400 font-semibold hover:underline">View All</button>
+                                </div>
+                                <div class="space-y-3">
+                                    ${recentBazars.length === 0 ? '<p class="text-xs text-slate-500">No recent purchases</p>' : ''}
+                                    ${recentBazars.map(b => {
+                                        const buyer = (this.data.members || []).find(m => m.id === b.buyerId);
+                                        return `
+                                            <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+                                                <div>
+                                                    <div class="text-xs font-bold text-slate-200">${buyer ? buyer.name : 'Unknown'} (Buyer)</div>
+                                                    <div class="text-[11px] text-slate-400">${b.date} • ${(b.items || []).length} items</div>
+                                                </div>
+                                                <div class="font-extrabold text-sm text-rose-400">৳ ${b.grandTotal}</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl interactive-hover-card">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-bold text-white text-sm flex items-center gap-2">
+                                        <i class="fa-solid fa-money-bill-check text-emerald-400"></i> Recent Deposits
+                                    </h4>
+                                    ${this.role === 'manager' ? `<button onclick="app.navigate('deposits')" class="text-xs text-brand-400 font-semibold hover:underline">View All</button>` : ''}
+                                </div>
+                                <div class="space-y-3">
+                                    ${recentDeposits.length === 0 ? '<p class="text-xs text-slate-500">No recent deposits</p>' : ''}
+                                    ${recentDeposits.map(d => {
+                                        const mem = (this.data.members || []).find(m => m.id === d.memberId);
+                                        return `
+                                            <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+                                                <div>
+                                                    <div class="text-xs font-bold text-slate-200">${mem ? mem.name : 'Unknown'}</div>
+                                                    <div class="text-[11px] text-slate-400">${d.date} • ${d.type}</div>
+                                                </div>
+                                                <div class="font-extrabold text-sm text-emerald-400">+ ৳ ${d.amount}</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            openBazarDutyModal() {
+                if (this.role !== 'manager') {
+                    Swal.fire('Access Denied', 'Only Manager can assign or edit weekly bazar duties.', 'warning');
+                    return;
+                }
+
+                const activeMembers = (this.data.members || []).filter(m => m.status === 'active');
+                if (activeMembers.length === 0) {
+                    Swal.fire('Notice', 'Please add active members first!', 'warning');
+                    return;
+                }
+
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const sched = this.data.bazarDutySchedule || {};
+                const container = document.getElementById('bazarDutyInputs');
+
+                container.innerHTML = days.map(d => `
+                    <div class="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 gap-2">
+                        <span class="text-xs font-bold text-slate-300 w-24 sm:w-28">${d}</span>
+                        <select name="duty_${d}" class="duty-select flex-1 px-2.5 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-xs font-medium focus:ring-2 focus:ring-brand-500 text-white">
+                            <option value="">-- Select Member --</option>
+                            ${activeMembers.map(m => `<option value="${m.id}" ${sched[d] === m.id ? 'selected' : ''}>${m.name}</option>`).join('')}
+                        </select>
+                    </div>
+                `).join('');
+
+                document.getElementById('bazarDutyModal').classList.remove('hidden');
+            }
+
+            autoDistributeBazarDuty() {
+                if (this.role !== 'manager') {
+                    Swal.fire('Access Denied', 'Only Manager can auto-distribute weekly duties.', 'warning');
+                    return;
+                }
+
+                const activeMembers = (this.data.members || []).filter(m => m.status === 'active');
+                if (activeMembers.length === 0) return;
+
+                const selects = document.querySelectorAll('.duty-select');
+                selects.forEach((sel, idx) => {
+                    const assignedMem = activeMembers[idx % activeMembers.length];
+                    sel.value = assignedMem.id;
+                });
+            }
+
+            saveBazarDutySchedule(e) {
+                e.preventDefault();
+                if (this.role !== 'manager') {
+                    Swal.fire('Access Denied', 'Only Manager can save weekly duty changes.', 'error');
+                    return;
+                }
+
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const newSchedule = {};
+
+                days.forEach(d => {
+                    const sel = document.querySelector(`select[name="duty_${d}"]`);
+                    if (sel) {
+                        newSchedule[d] = sel.value;
+                    }
+                });
+
+                this.data.bazarDutySchedule = newSchedule;
+                this.saveState('Manager updated 7-Day Weekly Bazar Duty Schedule');
+                this.closeModal('bazarDutyModal');
+                this.render();
+                Swal.fire('Saved!', 'Weekly Bazar duty schedule updated.', 'success');
+            }
+
+            renderMeals() {
+                const month = this.currentMonth;
+                const [year, monthNum] = month.split('-').map(Number);
+                const daysInMonth = new Date(year, monthNum, 0).getDate();
+                const activeMembers = (this.data.members || []).filter(m => m.status === 'active');
+                const monthMeals = (this.data.meals && this.data.meals[month]) ? this.data.meals[month] : {};
+
+                return `
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl reveal-on-scroll">
+                            <div>
+                                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-utensils text-brand-400"></i> Daily Meal Sheet
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">1 meal is automatically added daily per active member with instant cloud synchronization.</p>
+                            </div>
+                            ${this.role === 'manager' ? `
+                                <div class="flex items-center gap-2 w-full sm:w-auto">
+                                    <button onclick="app.autoFillAllMeals()" class="w-full sm:w-auto px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition shadow">
+                                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Reset All Meals to 1
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden reveal-on-scroll">
+                            <div class="overflow-x-auto max-h-[600px]">
+                                <table class="w-full text-left text-xs border-collapse sticky top-0">
+                                    <thead class="bg-slate-800 text-slate-200 font-bold sticky top-0 border-b border-slate-700 shadow-sm z-10">
+                                        <tr>
+                                            <th class="p-3 min-w-[100px] bg-slate-800 sticky left-0 z-20 border-r border-slate-700">Date</th>
+                                            ${activeMembers.map(m => `
+                                                <th class="p-3 text-center min-w-[90px] border-r border-slate-700">${m.name}</th>
+                                            `).join('')}
+                                            <th class="p-3 text-center min-w-[80px] bg-slate-800 sticky right-0 z-20 border-l border-slate-700">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        ${Array.from({length: daysInMonth}, (_, i) => {
+                                            const dayNum = i + 1;
+                                            const dayStr = String(dayNum).padStart(2, '0');
+                                            const dateKey = `${month}-${dayStr}`;
+                                            const dayData = monthMeals[dateKey] || {};
+                                            let dailyTotal = 0;
+                                            
+                                            return `
+                                                <tr class="hover:bg-slate-800/40">
+                                                    <td class="p-2 font-bold text-white bg-slate-900 sticky left-0 z-10 border-r border-slate-800 whitespace-nowrap">
+                                                        Day ${dayNum}
+                                                    </td>
+                                                    ${activeMembers.map(m => {
+                                                        const currentCount = dayData[m.id] !== undefined ? dayData[m.id] : 1;
+                                                        dailyTotal += Number(currentCount);
+
+                                                        return `
+                                                            <td class="p-2 text-center border-r border-slate-800">
+                                                                ${this.role === 'manager' ? `
+                                                                    <input type="number" step="0.5" min="0" max="10" value="${currentCount}"
+                                                                        onchange="app.updateMealCount('${dateKey}', '${m.id}', this.value)"
+                                                                        class="w-14 sm:w-16 text-center py-1 border rounded-md font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none ${currentCount === 0 ? 'bg-rose-950 text-rose-300 border-rose-800' : 'bg-slate-800 border-slate-700 text-white'}">
+                                                                ` : `
+                                                                    <span class="font-bold ${currentCount === 0 ? 'text-rose-400' : 'text-slate-200'}">${currentCount}</span>
+                                                                `}
+                                                            </td>
+                                                        `;
+                                                    }).join('')}
+                                                    <td class="p-2 text-center font-black text-brand-400 bg-slate-900 sticky right-0 z-10 border-l border-slate-800">
+                                                        ${dailyTotal.toFixed(1)}
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            updateMealCount(dateKey, memberId, value) {
+                if (this.role !== 'manager') return;
+                const count = parseFloat(value) || 0;
+                const month = this.currentMonth;
+                if (!this.data.meals) this.data.meals = {};
+                if (!this.data.meals[month]) this.data.meals[month] = {};
+                if (!this.data.meals[month][dateKey]) this.data.meals[month][dateKey] = {};
+
+                const mem = (this.data.members || []).find(m => m.id === memberId);
+                const memName = mem ? mem.name : 'Member';
+
+                this.data.meals[month][dateKey][memberId] = count;
+                this.saveState(`Updated meal count for ${memName} on ${dateKey} to ${count}`);
+            }
+
+            autoFillAllMeals() {
+                if (this.role !== 'manager') return;
+                Swal.fire({
+                    title: 'Reset All Meals?',
+                    text: 'All meals for current month will be set to 1!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Reset',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.ensureDailyMealsForMonth(this.currentMonth);
+                        this.saveState(`Reset all member meals for ${this.currentMonth} to 1`);
+                        this.render();
+                        Swal.fire('Done!', 'All daily meals have been reset.', 'success');
+                    }
+                });
+            }
+
+            renderBazar() {
+                const monthBazars = (this.data.bazar || []).filter(b => b.month === this.currentMonth);
+                const totalBazarMonth = monthBazars.reduce((sum, b) => sum + Number(b.grandTotal || 0), 0);
+
+                return `
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl reveal-on-scroll">
+                            <div>
+                                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-cart-shopping text-rose-400"></i> Grocery & Bazar Log
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">Members can submit grocery entries. Only managers can edit or delete entries. Total monthly cost: <strong class="text-white">৳ ${totalBazarMonth.toLocaleString('en-US')}</strong></p>
+                            </div>
+                            <button onclick="app.openBazarModal()" class="w-full sm:w-auto px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 shadow-md transition">
+                                <i class="fa-solid fa-plus"></i> Add New Purchase
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden reveal-on-scroll">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-800 text-slate-300 text-xs uppercase font-semibold border-b border-slate-700">
+                                        <tr>
+                                            <th class="p-3">Date</th>
+                                            <th class="p-3">Buyer</th>
+                                            <th class="p-3">Items Purchased</th>
+                                            <th class="p-3 text-right">Total (৳)</th>
+                                            <th class="p-3">Notes</th>
+                                            <th class="p-3 text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        ${monthBazars.length === 0 ? `
+                                            <tr>
+                                                <td colspan="6" class="p-8 text-center text-slate-500">No grocery purchases logged for this month.</td>
+                                            </tr>
+                                        ` : ''}
+                                        ${monthBazars.map(b => {
+                                            const buyer = (this.data.members || []).find(m => m.id === b.buyerId);
+                                            return `
+                                                <tr class="hover:bg-slate-800/40 transition">
+                                                    <td class="p-3 font-semibold text-white whitespace-nowrap">${b.date}</td>
+                                                    <td class="p-3 font-medium text-slate-200 whitespace-nowrap">${buyer ? buyer.name : 'Unknown'}</td>
+                                                    <td class="p-3">
+                                                        <div class="space-y-1">
+                                                            ${(b.items || []).map(i => `
+                                                                <span class="inline-block bg-slate-800 text-slate-200 text-xs px-2 py-0.5 rounded border border-slate-700 mr-1 mb-0.5">
+                                                                    ${i.name}: ${i.qty} ${i.unit || ''} x ৳${i.price} = <strong>৳${i.total}</strong>
+                                                                </span>
+                                                            `).join('')}
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-3 text-right font-black text-rose-400 whitespace-nowrap">৳ ${Number(b.grandTotal).toLocaleString('en-US')}</td>
+                                                    <td class="p-3 text-slate-400 text-xs">${b.note || '-'}</td>
+                                                    <td class="p-3 text-center whitespace-nowrap">
+                                                        ${this.role === 'manager' ? `
+                                                            <button onclick="app.editBazar('${b.id}')" class="p-1.5 text-slate-400 hover:text-brand-400 mr-1" title="Edit">
+                                                                <i class="fa-solid fa-pen-to-square"></i>
+                                                            </button>
+                                                            <button onclick="app.deleteBazar('${b.id}')" class="p-1.5 text-slate-400 hover:text-rose-400" title="Delete">
+                                                                <i class="fa-solid fa-trash-can"></i>
+                                                            </button>
+                                                        ` : `
+                                                            <span class="text-xs text-slate-500 italic">Locked</span>
+                                                        `}
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            openBazarModal(bazarId = null) {
+                if (bazarId && this.role !== 'manager') {
+                    Swal.fire('Access Denied', 'Members cannot edit submitted entries. Please switch to Manager View.', 'warning');
+                    return;
+                }
+
+                const activeMembers = (this.data.members || []).filter(m => m.status === 'active');
+                if (activeMembers.length === 0) {
+                    Swal.fire('Notice', 'Please add active members first!', 'warning');
+                    return;
+                }
+
+                const buyerSelect = document.getElementById('bazarBuyerId');
+                buyerSelect.innerHTML = activeMembers.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+
+                const todayStr = new Date().toISOString().substring(0, 10);
+                document.getElementById('bazarDate').value = todayStr;
+                document.getElementById('bazarId').value = '';
+                document.getElementById('bazarNote').value = '';
+                document.getElementById('bazarItemsContainer').innerHTML = '';
+
+                if (bazarId) {
+                    const b = (this.data.bazar || []).find(item => item.id === bazarId);
+                    if (b) {
+                        document.getElementById('bazarId').value = b.id;
+                        document.getElementById('bazarDate').value = b.date;
+                        document.getElementById('bazarBuyerId').value = b.buyerId;
+                        document.getElementById('bazarNote').value = b.note || '';
+                        (b.items || []).forEach(item => this.addBazarItemRow(item));
+                    }
+                } else {
+                    this.addBazarItemRow();
+                }
+
+                this.calculateBazarGrandTotal();
+                document.getElementById('bazarModal').classList.remove('hidden');
+            }
+
+            addBazarItemRow(data = { name: '', qty: 1, unit: 'kg', price: 0, total: 0 }) {
+                const container = document.getElementById('bazarItemsContainer');
+                const rowId = 'item_' + Date.now() + Math.random().toString(36).substring(2, 5);
+
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-12 gap-1.5 sm:gap-2 items-center bg-slate-900 p-2 rounded-lg border border-slate-800';
+                div.id = rowId;
+                div.innerHTML = `
+                    <div class="col-span-4 sm:col-span-4">
+                        <input type="text" placeholder="Item (e.g. Rice)" value="${data.name}" required class="bazar-item-name w-full px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-white">
+                    </div>
+                    <div class="col-span-2 sm:col-span-2">
+                        <input type="number" step="any" placeholder="Qty" value="${data.qty}" oninput="app.calculateBazarGrandTotal()" required class="bazar-item-qty w-full px-1.5 sm:px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-center text-white">
+                    </div>
+                    <div class="col-span-2 sm:col-span-2">
+                        <input type="text" placeholder="Unit" value="${data.unit || 'kg'}" class="bazar-item-unit w-full px-1.5 sm:px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-center text-white">
+                    </div>
+                    <div class="col-span-2 sm:col-span-2">
+                        <input type="number" step="any" placeholder="Price" value="${data.price}" oninput="app.calculateBazarGrandTotal()" required class="bazar-item-price w-full px-1.5 sm:px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-right text-white">
+                    </div>
+                    <div class="col-span-2 sm:col-span-2 flex items-center justify-between pl-1">
+                        <span class="bazar-item-total font-bold text-[11px] sm:text-xs text-slate-200">৳${data.total || 0}</span>
+                        <button type="button" onclick="document.getElementById('${rowId}').remove(); app.calculateBazarGrandTotal();" class="text-rose-400 hover:text-rose-300 p-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+                this.calculateBazarGrandTotal();
+            }
+
+            calculateBazarGrandTotal() {
+                let grandTotal = 0;
+                document.querySelectorAll('#bazarItemsContainer > div').forEach(row => {
+                    const qty = parseFloat(row.querySelector('.bazar-item-qty').value) || 0;
+                    const price = parseFloat(row.querySelector('.bazar-item-price').value) || 0;
+                    const total = qty * price;
+                    row.querySelector('.bazar-item-total').textContent = `৳${total.toFixed(2)}`;
+                    grandTotal += total;
+                });
+                document.getElementById('bazarGrandTotal').textContent = `৳ ${grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            }
+
+            saveBazar(e) {
+                e.preventDefault();
+                const bazarId = document.getElementById('bazarId').value;
+
+                if (bazarId && this.role !== 'manager') {
+                    Swal.fire('Access Denied', 'Members cannot edit saved purchase entries.', 'error');
+                    return;
+                }
+
+                const date = document.getElementById('bazarDate').value;
+                const buyerId = document.getElementById('bazarBuyerId').value;
+                const note = document.getElementById('bazarNote').value;
+                const month = date.substring(0, 7);
+                const buyer = (this.data.members || []).find(m => m.id === buyerId);
+                const buyerName = buyer ? buyer.name : 'Unknown';
+
+                const items = [];
+                let grandTotal = 0;
+
+                document.querySelectorAll('#bazarItemsContainer > div').forEach(row => {
+                    const name = row.querySelector('.bazar-item-name').value;
+                    const qty = parseFloat(row.querySelector('.bazar-item-qty').value) || 0;
+                    const unit = row.querySelector('.bazar-item-unit').value;
+                    const price = parseFloat(row.querySelector('.bazar-item-price').value) || 0;
+                    const total = qty * price;
+
+                    if (name.trim() !== '') {
+                        items.push({ name, qty, unit, price, total });
+                        grandTotal += total;
+                    }
+                });
+
+                if (items.length === 0) {
+                    Swal.fire('Error', 'Please add at least one item.', 'error');
+                    return;
+                }
+
+                if (!this.data.bazar) this.data.bazar = [];
+
+                if (bazarId) {
+                    const idx = this.data.bazar.findIndex(b => b.id === bazarId);
+                    if (idx !== -1) {
+                        this.data.bazar[idx] = { id: bazarId, month, date, buyerId, items, grandTotal, note, updatedAt: new Date().toISOString() };
+                    }
+                    this.saveState(`Updated grocery entry for ${buyerName} (৳${grandTotal})`);
+                } else {
+                    const newEntry = {
+                        id: 'b_' + Date.now(),
+                        month,
+                        date,
+                        buyerId,
+                        items,
+                        grandTotal,
+                        note,
+                        updatedAt: new Date().toISOString()
+                    };
+                    this.data.bazar.push(newEntry);
+                    this.saveState(`Logged new grocery purchase: ${buyerName} (৳${grandTotal})`);
+                }
+
+                this.closeModal('bazarModal');
+                this.render();
+                Swal.fire('Saved!', 'Grocery entry saved to cloud.', 'success');
+            }
+
+            editBazar(id) {
+                this.openBazarModal(id);
+            }
+
+            deleteBazar(id) {
+                if (this.role !== 'manager') return;
+                Swal.fire({
+                    title: 'Delete Entry?',
+                    text: 'This grocery record will be permanently deleted!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Delete',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const targetBazar = (this.data.bazar || []).find(b => b.id === id);
+                        const bAmount = targetBazar ? targetBazar.grandTotal : 0;
+                        this.data.bazar = (this.data.bazar || []).filter(b => b.id !== id);
+                        this.saveState(`Deleted grocery entry worth ৳${bAmount}`);
+                        this.render();
+                        Swal.fire('Deleted!', 'Grocery record has been removed.', 'success');
+                    }
+                });
+            }
+
+            renderDeposits() {
+                const monthDeposits = (this.data.deposits || []).filter(d => d.month === this.currentMonth);
+                const totalDepositsMonth = monthDeposits.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+
+                return `
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl reveal-on-scroll">
+                            <div>
+                                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-wallet text-emerald-400"></i> Member Deposit History
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">Total member deposit collections for current month: <strong class="text-emerald-400">৳ ${totalDepositsMonth.toLocaleString('en-US')}</strong></p>
+                            </div>
+                            <button onclick="app.openDepositModal()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 shadow-md transition">
+                                <i class="fa-solid fa-plus"></i> Record Deposit
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden reveal-on-scroll">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-800 text-slate-300 text-xs uppercase font-semibold border-b border-slate-700">
+                                        <tr>
+                                            <th class="p-3">Date</th>
+                                            <th class="p-3">Member Name</th>
+                                            <th class="p-3">Method</th>
+                                            <th class="p-3 text-right">Amount (৳)</th>
+                                            <th class="p-3">Comment</th>
+                                            <th class="p-3 text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        ${monthDeposits.length === 0 ? `
+                                            <tr>
+                                                <td colspan="6" class="p-8 text-center text-slate-500">No deposit records found for this month.</td>
+                                            </tr>
+                                        ` : ''}
+                                        ${monthDeposits.map(d => {
+                                            const mem = (this.data.members || []).find(m => m.id === d.memberId);
+                                            return `
+                                                <tr class="hover:bg-slate-800/40 transition">
+                                                    <td class="p-3 font-semibold text-white whitespace-nowrap">${d.date}</td>
+                                                    <td class="p-3 font-medium text-slate-200 whitespace-nowrap">${mem ? mem.name : 'Unknown'}</td>
+                                                    <td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-300 border border-slate-700">${d.type}</span></td>
+                                                    <td class="p-3 text-right font-black text-emerald-400 whitespace-nowrap">৳ ${Number(d.amount).toLocaleString('en-US')}</td>
+                                                    <td class="p-3 text-slate-400 text-xs">${d.note || '-'}</td>
+                                                    <td class="p-3 text-center whitespace-nowrap">
+                                                        <button onclick="app.editDeposit('${d.id}')" class="p-1.5 text-slate-400 hover:text-brand-400 mr-1">
+                                                            <i class="fa-solid fa-pen-to-square"></i>
+                                                        </button>
+                                                        <button onclick="app.deleteDeposit('${d.id}')" class="p-1.5 text-slate-400 hover:text-rose-400">
+                                                            <i class="fa-solid fa-trash-can"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            openDepositModal(depositId = null) {
+                const activeMembers = (this.data.members || []).filter(m => m.status === 'active');
+                if (activeMembers.length === 0) {
+                    Swal.fire('Notice', 'Please add active members first!', 'warning');
+                    return;
+                }
+
+                const select = document.getElementById('depositMemberId');
+                select.innerHTML = activeMembers.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+
+                const todayStr = new Date().toISOString().substring(0, 10);
+                document.getElementById('depositDate').value = todayStr;
+                document.getElementById('depositId').value = '';
+                document.getElementById('depositAmount').value = '';
+                document.getElementById('depositNote').value = '';
+
+                if (depositId) {
+                    const d = (this.data.deposits || []).find(item => item.id === depositId);
+                    if (d) {
+                        document.getElementById('depositId').value = d.id;
+                        document.getElementById('depositMemberId').value = d.memberId;
+                        document.getElementById('depositAmount').value = d.amount;
+                        document.getElementById('depositDate').value = d.date;
+                        document.getElementById('depositType').value = d.type;
+                        document.getElementById('depositNote').value = d.note || '';
+                    }
+                }
+
+                document.getElementById('depositModal').classList.remove('hidden');
+            }
+
+            saveDeposit(e) {
+                e.preventDefault();
+                const id = document.getElementById('depositId').value;
+                const memberId = document.getElementById('depositMemberId').value;
+                const amount = parseFloat(document.getElementById('depositAmount').value) || 0;
+                const date = document.getElementById('depositDate').value;
+                const type = document.getElementById('depositType').value;
+                const note = document.getElementById('depositNote').value;
+                const month = date.substring(0, 7);
+
+                const mem = (this.data.members || []).find(m => m.id === memberId);
+                const memName = mem ? mem.name : 'Member';
+
+                if (!this.data.deposits) this.data.deposits = [];
+
+                if (id) {
+                    const idx = this.data.deposits.findIndex(d => d.id === id);
+                    if (idx !== -1) {
+                        this.data.deposits[idx] = { id, month, date, memberId, amount, type, note };
+                    }
+                    this.saveState(`Updated deposit record for ${memName} (৳${amount})`);
+                } else {
+                    const newEntry = { id: 'd_' + Date.now(), month, date, memberId, amount, type, note };
+                    this.data.deposits.push(newEntry);
+                    this.saveState(`Recorded new deposit from ${memName} (৳${amount})`);
+                }
+
+                this.closeModal('depositModal');
+                this.render();
+                Swal.fire('Saved!', 'Deposit entry recorded successfully.', 'success');
+            }
+
+            editDeposit(id) {
+                this.openDepositModal(id);
+            }
+
+            deleteDeposit(id) {
+                Swal.fire({
+                    title: 'Delete Deposit?',
+                    text: 'This deposit entry will be removed!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Delete',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const targetDep = (this.data.deposits || []).find(d => d.id === id);
+                        const dAmt = targetDep ? targetDep.amount : 0;
+                        this.data.deposits = (this.data.deposits || []).filter(d => d.id !== id);
+                        this.saveState(`Deleted deposit record worth ৳${dAmt}`);
+                        this.render();
+                        Swal.fire('Deleted!', 'Deposit entry removed.', 'success');
+                    }
+                });
+            }
+
+            renderSettlement() {
+                const stats = this.getCalculatedStats();
+
+                return `
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 reveal-on-scroll">
+                            <div>
+                                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-scale-balanced text-purple-400"></i> Account Settlement & Clearance
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">Use the "Clear" option at month-end to reconcile member dues or refunds.</p>
+                            </div>
+                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                                ${stats.isMonthClosed ? 
+                                    `<span class="px-3 py-1.5 bg-emerald-950 text-emerald-300 border border-emerald-800/60 rounded-lg text-xs font-bold flex items-center gap-1"><i class="fa-solid fa-lock"></i> Month Finalized & Locked</span>` :
+                                    `<button onclick="app.finalizeMonth()" class="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl shadow transition border border-slate-700"><i class="fa-solid fa-lock mr-1"></i> Finalize & Lock Month</button>`
+                                }
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden reveal-on-scroll">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-800 text-slate-300 text-xs uppercase font-semibold border-b border-slate-700">
+                                        <tr>
+                                            <th class="p-3">Member Name</th>
+                                            <th class="p-3 text-center">Meals</th>
+                                            <th class="p-3 text-right">Deposits (৳)</th>
+                                            <th class="p-3 text-right">Meal Cost (৳)</th>
+                                            <th class="p-3 text-right">Receivable (Refund)</th>
+                                            <th class="p-3 text-right">Payable (Due)</th>
+                                            <th class="p-3 text-center">Status</th>
+                                            <th class="p-3 text-center">Clear Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        ${stats.memberSummaries.map(m => `
+                                            <tr class="hover:bg-slate-800/40 transition">
+                                                <td class="p-3 font-semibold text-white">${m.name}</td>
+                                                <td class="p-3 text-center font-bold text-slate-200">${m.totalMeals.toFixed(1)}</td>
+                                                <td class="p-3 text-right text-emerald-400 font-medium">৳ ${m.totalDeposit.toLocaleString('en-US')}</td>
+                                                <td class="p-3 text-right text-slate-300">৳ ${m.totalCost.toFixed(2)}</td>
+                                                <td class="p-3 text-right font-extrabold text-emerald-400">
+                                                    ${m.pabena > 0 ? `৳ ${m.pabena.toFixed(2)}` : '-'}
+                                                </td>
+                                                <td class="p-3 text-right font-extrabold text-rose-400">
+                                                    ${m.debe > 0 ? `৳ ${m.debe.toFixed(2)}` : '-'}
+                                                </td>
+                                                <td class="p-3 text-center">
+                                                    ${m.isCleared ? 
+                                                        `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800/60">Cleared (Settled)</span>` :
+                                                        `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800/60">Unsettled</span>`
+                                                    }
+                                                </td>
+                                                <td class="p-3 text-center">
+                                                    <button onclick="app.openClearModal('${m.id}')" class="px-3 py-1 bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-800/60 text-xs font-semibold rounded-lg transition flex items-center gap-1 mx-auto">
+                                                        <i class="fa-solid fa-check-double"></i> Clear Balance
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            openClearModal(memberId) {
+                const stats = this.getCalculatedStats();
+                const memSummary = stats.memberSummaries.find(m => m.id === memberId);
+                if (!memSummary) return;
+
+                document.getElementById('clearMemberId').value = memberId;
+                document.getElementById('clearMemberName').textContent = memSummary.name;
+                
+                let balanceText = '';
+                if (memSummary.netBalance > 0) {
+                    balanceText = `Receivable ৳ ${memSummary.pabena.toFixed(2)}`;
+                    document.getElementById('clearType').value = 'Refund';
+                    document.getElementById('clearAmount').value = memSummary.pabena.toFixed(2);
+                } else if (memSummary.netBalance < 0) {
+                    balanceText = `Payable ৳ ${memSummary.debe.toFixed(2)}`;
+                    document.getElementById('clearType').value = 'Collection';
+                    document.getElementById('clearAmount').value = memSummary.debe.toFixed(2);
+                } else {
+                    balanceText = `Zero Balance (৳ 0.00)`;
+                    document.getElementById('clearType').value = 'Zero';
+                    document.getElementById('clearAmount').value = 0;
+                }
+
+                document.getElementById('clearCurrentBalance').textContent = balanceText;
+                document.getElementById('clearDate').value = new Date().toISOString().substring(0, 10);
+                document.getElementById('clearModal').classList.remove('hidden');
+            }
+
+            saveSettlement(e) {
+                e.preventDefault();
+                const memberId = document.getElementById('clearMemberId').value;
+                const type = document.getElementById('clearType').value;
+                const amount = parseFloat(document.getElementById('clearAmount').value) || 0;
+                const date = document.getElementById('clearDate').value;
+                const status = document.getElementById('clearStatus').value;
+                const note = document.getElementById('clearNote').value;
+                const month = this.currentMonth;
+
+                const mem = (this.data.members || []).find(m => m.id === memberId);
+                const memName = mem ? mem.name : 'Member';
+
+                if (!this.data.settlements) this.data.settlements = [];
+
+                this.data.settlements = this.data.settlements.filter(s => !(s.month === month && s.memberId === memberId));
+
+                this.data.settlements.push({
+                    id: 's_' + Date.now(),
+                    month,
+                    date,
+                    memberId,
+                    type,
+                    amount,
+                    status,
+                    note
+                });
+
+                this.saveState(`Cleared monthly settlement statement for ${memName}`);
+                this.closeModal('clearModal');
+                this.render();
+                Swal.fire('Cleared!', 'Member account settlement record saved.', 'success');
+            }
+
+            finalizeMonth() {
+                Swal.fire({
+                    title: 'Finalize Month?',
+                    text: 'Locking this month will prevent further modification.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Lock Month',
+                    cancelButtonText: 'Cancel'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        if (!this.data.closedMonths) this.data.closedMonths = {};
+                        this.data.closedMonths[this.currentMonth] = true;
+                        this.saveState(`Month ${this.currentMonth} locked and finalized`);
+                        this.render();
+                        Swal.fire('Locked!', 'Current month calculations finalized.', 'success');
+                    }
+                });
+            }
+
+            renderMembers() {
+                return `
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl reveal-on-scroll">
+                            <div>
+                                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-users text-brand-400"></i> Mess Members List
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">Manage active/inactive members, edit details or room numbers.</p>
+                            </div>
+                            <button onclick="app.openMemberModal()" class="w-full sm:w-auto px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 shadow-md transition">
+                                <i class="fa-solid fa-user-plus"></i> Add New Member
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 reveal-on-scroll">
+                            ${(this.data.members || []).length === 0 ? `
+                                <div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800">
+                                    No members found. Click above to add members.
+                                </div>
+                            ` : ''}
+                            ${(this.data.members || []).map(m => `
+                                <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl relative interactive-hover-card">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-brand-950 text-brand-400 border border-brand-800 font-extrabold flex items-center justify-center text-base shadow flex-shrink-0">
+                                                ${m.name.substring(0, 1)}
+                                            </div>
+                                            <div>
+                                                <h3 class="font-bold text-white text-sm">${m.name}</h3>
+                                                <span class="text-xs text-slate-400">${m.room ? 'Room: '+m.room : 'No room set'}</span>
+                                            </div>
+                                        </div>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${m.status === 'active' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/60' : 'bg-slate-800 text-slate-400'}">
+                                            ${m.status === 'active' ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+
+                                    <div class="space-y-1 text-xs text-slate-300 mb-4 border-t border-slate-800 pt-3">
+                                        <p><i class="fa-solid fa-phone text-slate-500 mr-2"></i> ${m.phone || 'No phone number'}</p>
+                                        <p><i class="fa-solid fa-calendar-day text-slate-500 mr-2"></i> Joined: ${m.createdAt || 'N/A'}</p>
+                                    </div>
+
+                                    <div class="flex items-center justify-end border-t border-slate-800 pt-3 gap-2">
+                                        <button onclick="app.editMember('${m.id}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition flex items-center gap-1">
+                                            <i class="fa-solid fa-pen"></i> Edit
+                                        </button>
+                                        <button onclick="app.toggleMemberStatus('${m.id}')" class="px-3 py-1 ${m.status === 'active' ? 'bg-rose-950 text-rose-300 hover:bg-rose-900' : 'bg-emerald-950 text-emerald-300 hover:bg-emerald-900'} text-xs rounded-lg transition border ${m.status === 'active' ? 'border-rose-800/60' : 'border-emerald-800/60'}">
+                                            ${m.status === 'active' ? 'Deactivate' : 'Activate'}
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            openMemberModal(id = null) {
+                document.getElementById('memberId').value = '';
+                document.getElementById('memberName').value = '';
+                document.getElementById('memberPhone').value = '';
+                document.getElementById('memberRoom').value = '';
+                document.getElementById('memberStatus').value = 'active';
+
+                if (id) {
+                    const m = (this.data.members || []).find(item => item.id === id);
+                    if (m) {
+                        document.getElementById('memberId').value = m.id;
+                        document.getElementById('memberName').value = m.name;
+                        document.getElementById('memberPhone').value = m.phone || '';
+                        document.getElementById('memberRoom').value = m.room || '';
+                        document.getElementById('memberStatus').value = m.status;
+                    }
+                }
+
+                document.getElementById('memberModal').classList.remove('hidden');
+            }
+
+            saveMember(e) {
+                e.preventDefault();
+                const id = document.getElementById('memberId').value;
+                const name = document.getElementById('memberName').value.trim();
+                const phone = document.getElementById('memberPhone').value.trim();
+                const room = document.getElementById('memberRoom').value.trim();
+                const status = document.getElementById('memberStatus').value;
+                const todayStr = new Date().toISOString().substring(0, 10);
+
+                if (!this.data.members) this.data.members = [];
+
+                if (id) {
+                    const idx = this.data.members.findIndex(m => m.id === id);
+                    if (idx !== -1) {
+                        this.data.members[idx] = { ...this.data.members[idx], name, phone, room, status };
+                    }
+                    this.saveState(`Updated profile for member ${name}`);
+                } else {
+                    const newMem = { id: 'm_' + Date.now(), name, phone, room, status, createdAt: todayStr };
+                    this.data.members.push(newMem);
+                    this.saveState(`Added new member: ${name}`);
+                }
+
+                this.closeModal('memberModal');
+                this.render();
+                Swal.fire('Saved!', 'Member information synced to cloud.', 'success');
+            }
+
+            editMember(id) {
+                this.openMemberModal(id);
+            }
+
+            toggleMemberStatus(id) {
+                const idx = (this.data.members || []).findIndex(m => m.id === id);
+                if (idx !== -1) {
+                    const currentM = this.data.members[idx];
+                    currentM.status = currentM.status === 'active' ? 'inactive' : 'active';
+                    this.saveState(`Marked member ${currentM.name} as ${currentM.status}`);
+                    this.render();
+                }
+            }
+
+            promptSelectManager() {
+                const month = this.currentMonth;
+                const currentYM = new Date().toISOString().substring(0, 7);
+
+                if (month > currentYM) {
+                    Swal.fire('Not Allowed', 'Future month manager cannot be set in advance. Please wait until the month starts.', 'warning');
+                    return;
+                }
+
+                if (!this.data.managerChanges) this.data.managerChanges = {};
+                const currentChanges = this.data.managerChanges[month] || 0;
+
+                if (currentChanges >= 1) {
+                    Swal.fire('Limit Reached', 'Manager has already been changed once for this month! Further edits are locked.', 'error');
+                    return;
+                }
+
+                const activeMembers = (this.data.members || []).filter(m => m.status === 'active');
+                let options = {};
+                activeMembers.forEach(m => options[m.id] = m.name);
+
+                Swal.fire({
+                    title: 'Select Manager',
+                    text: 'Warning: Manager can only be changed ONCE per month!',
+                    input: 'select',
+                    inputOptions: options,
+                    inputPlaceholder: 'Choose a member',
+                    showCancelButton: true,
+                    confirmButtonText: 'Assign Manager',
+                    cancelButtonText: 'Cancel'
+                }).then((res) => {
+                    if (res.isConfirmed && res.value) {
+                        if (!this.data.managers) this.data.managers = {};
+                        this.data.managers[month] = res.value;
+                        this.data.managerChanges[month] = currentChanges + 1;
+
+                        const selectedMem = activeMembers.find(m => m.id === res.value);
+                        const mName = selectedMem ? selectedMem.name : 'New Member';
+
+                        this.saveState(`Assigned ${mName} as manager for month ${month} (Monthly limit reached)`);
+                        this.render();
+                        Swal.fire('Done!', 'Manager appointed successfully. Further changes locked for this month.', 'success');
+                    }
+                });
+            }
+
+            async promptChangePassword() {
+                const { value: formValues } = await Swal.fire({
+                    title: 'Change Manager Password',
+                    html:
+                        '<input id="swal-input1" class="swal2-input" type="password" placeholder="Old Password">' +
+                        '<input id="swal-input2" class="swal2-input" type="password" placeholder="New Password">',
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Change',
+                    cancelButtonText: 'Cancel',
+                    preConfirm: () => {
+                        return [
+                            document.getElementById('swal-input1').value,
+                            document.getElementById('swal-input2').value
+                        ]
+                    }
+                });
+
+                if (formValues) {
+                    const [oldPass, newPass] = formValues;
+                    const currentPass = this.data.settings?.managerPassword || '1234';
+
+                    if (oldPass !== currentPass) {
+                        Swal.fire('Error', 'Old password incorrect!', 'error');
+                        return;
+                    }
+
+                    if (!newPass || newPass.length < 3) {
+                        Swal.fire('Error', 'New password must be at least 3 characters long!', 'error');
+                        return;
+                    }
+
+                    this.data.settings.managerPassword = newPass;
+                    this.saveState('Changed manager password');
+                    Swal.fire('Success!', 'Manager password updated successfully.', 'success');
+                }
+            }
+
+            renderReports() {
+                const stats = this.getCalculatedStats();
+                const monthBazars = (this.data.bazar || []).filter(b => b.month === this.currentMonth);
+                const [year, monthNum] = this.currentMonth.split('-');
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                const monthText = `${monthNames[parseInt(monthNum)-1]} ${year}`;
+
+                return `
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="flex justify-between items-center bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-xl no-print reveal-on-scroll">
+                            <div>
+                                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-file-invoice text-brand-400"></i> Monthly Report & Print
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">Print full monthly statement or save as PDF document.</p>
+                            </div>
+                            <button onclick="window.print()" class="px-4 sm:px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-md transition">
+                                <i class="fa-solid fa-print"></i> Print Report
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900 text-slate-100 p-4 sm:p-8 rounded-2xl border border-slate-800 shadow-2xl space-y-6 reveal-on-scroll">
+                            <div class="border-b border-slate-800 pb-6 text-center">
+                                <h1 class="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">Family Mess Meal Statement</h1>
+                                <p class="text-sm font-bold text-brand-400 mt-1">Month: ${monthText}</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Manager: ${stats.managerName}</p>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800 text-center text-xs">
+                                <div>
+                                    <span class="text-slate-400 block">Total Grocery Cost</span>
+                                    <strong class="text-sm font-bold text-white">৳ ${stats.totalBazarCost.toLocaleString('en-US')}</strong>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block">Total Meals Eaten</span>
+                                    <strong class="text-sm font-bold text-white">${stats.totalMeals.toFixed(1)}</strong>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block">Final Meal Rate</span>
+                                    <strong class="text-sm font-bold text-brand-400">৳ ${stats.mealRate.toFixed(2)}</strong>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block">Total Deposits</span>
+                                    <strong class="text-sm font-bold text-emerald-400">৳ ${stats.totalDeposits.toLocaleString('en-US')}</strong>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="font-bold text-white text-sm mb-3">Member Summary Statements:</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-xs border border-slate-800">
+                                        <thead class="bg-slate-800 text-slate-200 font-bold border-b border-slate-700">
+                                            <tr>
+                                                <th class="p-2 border-r border-slate-700">Member Name</th>
+                                                <th class="p-2 text-center border-r border-slate-700">Meals</th>
+                                                <th class="p-2 text-right border-r border-slate-700">Deposits (৳)</th>
+                                                <th class="p-2 text-right border-r border-slate-700">Meal Cost (৳)</th>
+                                                <th class="p-2 text-right border-r border-slate-700">Receivable (৳)</th>
+                                                <th class="p-2 text-right border-r border-slate-700">Payable (৳)</th>
+                                                <th class="p-2 text-center">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-800">
+                                            ${stats.memberSummaries.map(m => `
+                                                <tr>
+                                                    <td class="p-2 font-semibold border-r border-slate-800 text-white">${m.name}</td>
+                                                    <td class="p-2 text-center border-r border-slate-800 font-medium text-slate-300">${m.totalMeals.toFixed(1)}</td>
+                                                    <td class="p-2 text-right border-r border-slate-800 text-slate-300">৳ ${m.totalDeposit.toLocaleString('en-US')}</td>
+                                                    <td class="p-2 text-right border-r border-slate-800 text-slate-300">৳ ${m.totalCost.toFixed(2)}</td>
+                                                    <td class="p-2 text-right border-r border-slate-800 font-bold text-emerald-400">${m.pabena > 0 ? '৳ ' + m.pabena.toFixed(2) : '-'}</td>
+                                                    <td class="p-2 text-right border-r border-slate-800 font-bold text-rose-400">${m.debe > 0 ? '৳ ' + m.debe.toFixed(2) : '-'}</td>
+                                                    <td class="p-2 text-center font-bold text-slate-300">${m.clearStatusText}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="font-bold text-white text-sm mb-3">Grocery Expense Breakdown:</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-xs border border-slate-800">
+                                        <thead class="bg-slate-800 text-slate-200 font-bold border-b border-slate-700">
+                                            <tr>
+                                                <th class="p-2 border-r border-slate-700">Date</th>
+                                                <th class="p-2 border-r border-slate-700">Buyer</th>
+                                                <th class="p-2 border-r border-slate-700">Description</th>
+                                                <th class="p-2 text-right">Total (৳)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-800">
+                                            ${monthBazars.map(b => {
+                                                const buyer = (this.data.members || []).find(m => m.id === b.buyerId);
+                                                return `
+                                                    <tr>
+                                                        <td class="p-2 border-r border-slate-800 text-slate-300">${b.date}</td>
+                                                        <td class="p-2 border-r border-slate-800 text-slate-300">${buyer ? buyer.name : 'Unknown'}</td>
+                                                        <td class="p-2 border-r border-slate-800 text-slate-300">${(b.items || []).map(i => `${i.name} (${i.qty}${i.unit||''})`).join(', ')}</td>
+                                                        <td class="p-2 text-right font-bold text-rose-400">৳ ${b.grandTotal}</td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="pt-12 flex justify-between items-center text-xs text-slate-400">
+                                <div class="text-center border-t border-slate-700 pt-2 w-32 sm:w-40">
+                                    Manager Signature
+                                </div>
+                                <div class="text-center border-t border-slate-700 pt-2 w-32 sm:w-40">
+                                    Members Representative
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            openLogModal() {
+                const logs = this.data.logs || [];
+                const container = document.getElementById('logContainer');
+
+                if (logs.length === 0) {
+                    container.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">No activity logs recorded yet.</p>`;
+                } else {
+                    container.innerHTML = logs.map(l => `
+                        <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs flex justify-between items-start gap-3 hover:bg-slate-800/40 transition">
+                            <div class="space-y-0.5">
+                                <div class="font-bold text-slate-200">${l.action}</div>
+                                <div class="text-[10px] text-slate-400">By: <span class="font-semibold text-brand-400">${l.user}</span></div>
+                            </div>
+                            <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono whitespace-nowrap border border-slate-700">${l.time}</span>
+                        </div>
+                    `).join('');
+                }
+
+                document.getElementById('logModal').classList.remove('hidden');
+            }
+
+            openBackupModal() {
+                if (this.role !== 'manager') {
+                    Swal.fire({
+                        title: 'Access Restricted!',
+                        text: 'Only Manager can access Data Backup & Disaster Recovery. Please switch to Manager View with password.',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                document.getElementById('backupModal').classList.remove('hidden');
+            }
+
+            closeModal(modalId) {
+                document.getElementById(modalId).classList.add('hidden');
+            }
+
+            exportData() {
+                if (this.role !== 'manager') {
+                    Swal.fire('Access Denied', 'Only Manager can export backups.', 'error');
+                    return;
+                }
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `mess_full_backup_${this.currentMonth}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+
+                this.saveState('Manager downloaded complete cloud database JSON backup');
+            }
+
+            importData(event) {
+                if (this.role !== 'manager') {
+                    Swal.fire('Access Denied', 'Only Manager can restore backups.', 'error');
+                    return;
+                }
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (imported && imported.members) {
+                            this.data = imported;
+                            this.saveState('Disaster Recovery: Complete database state restored from backup file');
+                            this.closeModal('backupModal');
+                            this.render();
+                            Swal.fire('Success!', 'Disaster Recovery completed! All previous database entries restored.', 'success');
+                        } else {
+                            throw new Error('Invalid format');
+                        }
+                    } catch (err) {
+                        Swal.fire('Error!', 'Please select a valid backup JSON file.', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        let app;
+        window.onload = function() {
+            app = new MessApp();
+        };
+    </script>
+</body>
+</html>
